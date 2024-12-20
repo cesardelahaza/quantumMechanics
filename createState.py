@@ -92,4 +92,4 @@ def generateNQubitsStates(n_qubits: int, how_many: int):
 def permutations(s):
     return sorted({"".join(p) for p in itertools.permutations(s)})
 
-print(generateNQubitsStates(3, 1))
+#print(generateNQubitsStates(3, 1))

@@ -60,8 +60,6 @@ def randomH(n_qubits: int, ring: bool):
     #     ham -= coeffs[2**n_qubits-1][0]*bottom_left + coeffs[0][2**n_qubits-1]*top_right
     return ham
 
-print(randomH(3, True))
-
 def hamiltonian(arr: pd.DataFrame) -> pd.DataFrame:
     """
     Returns hamiltonian with the matrix representation of it
@@ -75,35 +73,30 @@ def hamiltonian(arr: pd.DataFrame) -> pd.DataFrame:
 def eigenH(hamiltonian: pd.DataFrame):
     return np.linalg.eig(hamiltonian)
 
+# Let's define some probabilities of jump. Imagine we have the probability p0 of no jump,
+# p1 the probability of jump with 1 particle, p2 the probability of jump with 2 particles
 
-# hhh = randomH(3, True)
-# eee = eigenH(hhh)
-# eigenVectors = eee.eigenvectors
-# eigenValues = eee.eigenvalues
-# eigenV1 = eigenVectors[1]
+def numberOfParticles(s:str):
+    return sum(list(map(int, s)))
 
-
-
-##############################
-# Unidimensional Hopping Hamiltonian
-def hopping1Ham(n_qubits,p0: float, p1: float, periodic=False):
-    mat = (np.diag(np.full(n_qubits,p0)) +
-           np.diag(p1*np.ones(n_qubits-1),1) +
-           np.diag(p1*np.ones(n_qubits-1),-1))
-    if periodic:
-        mat[n_qubits-1][0], mat[0][n_qubits-1] = p1, p1
-    mat = pd.DataFrame(mat)
-    mat.index = [i for i in range(1,n_qubits+1)]
-    mat.columns = [i for i in range(1, n_qubits + 1)]
+def hoppingProbsMatrix(*probs):
+    l = len(probs)
+    states = createState.generateAllPossibleStates(l, [""])
+    mat = pd.DataFrame(np.zeros((2 ** l, 2 ** l)))
+    mat.index, mat.columns = states, states
+    for i in range(2**l):
+        for j in range(2**l):
+            if i == j:
+                mat.loc[states[i], states[j]] = probs[0]
+            else:
+                if numberOfParticles(states[i]) == numberOfParticles(states[j]):
+                    mat.loc[states[i], states[j]] = probs[numberOfParticles(states[i])]
     return mat
 
-def creationOpChain(n_qubits, ii):
-    """
-    This is de c+_i creation operator
-    :param n_qubits:
-    :param ii: respect to particle i in the chain
-    :return:
-    """
+print(hoppingProbsMatrix(0.5, 0.2, 0.3))
+
+def hoppingHam(n_qubits, *probs):
+    states = createState.generateAllPossibleStates(n_qubits, [""])
+    ham = pd.DataFrame(np.zeros((2 ** n_qubits, 2 ** n_qubits)))
+    ham.index, ham.columns = states, states
     return None
-
-
