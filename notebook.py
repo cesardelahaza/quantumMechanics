@@ -14,6 +14,7 @@ import qState as qS
 import qOperator as qO
 import qFunctions as qF
 import plot
+import networkx as nx
 ########################################################################
 # MAIN: control
 ########################################################################
@@ -127,6 +128,7 @@ if ctl.geom_hf_8q_noperiodic == 1:
     mat_con = qO.kinetic_operator(8, False).loc[one_states, one_states]
 
     # plot.eam_plot(mat_con)
+    plot.adjacency_matrix_graph(mat_con, 'circular')
 
     hf_values = qF.eigenvals(mat_ham)
     hf_min_value = np.argmin(hf_values)
@@ -150,6 +152,7 @@ if ctl.geom_hf_8q_periodic == 1:
     mat_con = qO.kinetic_operator(8, True).loc[one_states, one_states]
 
     # plot.eam_plot(mat_con)
+    plot.adjacency_matrix_graph(mat_con, 'circular')
 
     hf_values = qF.eigenvals(mat_ham)
     hf_min_value = np.argmin(hf_values)
@@ -173,6 +176,7 @@ if ctl.geom_hf_8q_jumps == 1:
     mat_con = qO.jump_op(8).loc[one_states, one_states]
 
     # plot.eam_plot(mat_con)
+    plot.adjacency_matrix_graph(mat_con, 'circular')
 
     hf_values = qF.eigenvals(mat_ham)
     hf_min_value = np.argmin(hf_values)
@@ -185,6 +189,32 @@ if ctl.geom_hf_8q_jumps == 1:
     # plot.eam_plot(hf_eam)
 
     plot.compare_plot(mat_con, hf_eam, "8 qubits - Connecting qubits separated with a position between them")
+
+# #########################################################################
+# Connecting qubits with a qubit between: 1 with 3, 2 with 4, 3 with 5... (Half-filling)
+if ctl.geom_hf_8q_jumps2 == 1:
+    one_states = qS.generateNQubitsStates(8, 1)[::-1]
+    hf_states = qS.generateNQubitsStates(8, 4)
+
+    mat_jump = qO.connect_op(8,[1], [3,7]) + qO.connect_op(8, [5], [3,7]) +\
+        qO.connect_op(8, [2],[4,8]) + qO.connect_op(8, [6], [4,8])
+    mat_ham = -mat_jump.loc[hf_states, hf_states]
+    mat_con = mat_jump.loc[one_states, one_states]
+
+    # plot.eam_plot(mat_con)
+    plot.adjacency_matrix_graph(mat_con, 'circular')
+
+    hf_values = qF.eigenvals(mat_ham)
+    hf_min_value = np.argmin(hf_values)
+    hf_vectors = qF.eigenstates(mat_ham)
+    hf_fs = hf_vectors[hf_min_value]
+
+    hf_density = pd.DataFrame(np.outer(hf_fs, hf_fs), index=hf_states, columns=hf_states)
+    hf_eam = qEAM.EAM(hf_density)
+
+    # plot.eam_plot(hf_eam)
+
+    plot.compare_plot(mat_con, hf_eam, "8 qubits - Connecting qubits separated with a position between them - Periodic")
 
 # #########################################################################
 # Connect qubits 1,2,3,4 between them and 5,6,7,8 between them, and 4 and 5 are connected (Half-filling)
@@ -200,6 +230,7 @@ if ctl.geom_hf_8q_blocks == 1:
                   qO.connect_op(8, [4, 5], [4, 5]).loc[one_states, one_states])
 
     # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'circular')
 
     two_values = qF.eigenvals(two_matrix)
     two_min_value = np.argmin(two_values)
@@ -211,7 +242,7 @@ if ctl.geom_hf_8q_blocks == 1:
 
     # plot.eam_plot(two_eam)
 
-    plot.compare_plot(con_matrix, two_eam, "Bridge")
+    plot.compare_plot(con_matrix, two_eam, "Blocks")
 
 # #########################################################################
 # This is [1,2,3]-[4]-[5]-[6,7,8] (Half-filling)
@@ -227,6 +258,7 @@ if ctl.geom_hf_8q_bridge == 1:
                   qO.connect_op(8, [4], [5]).loc[one_states, one_states])
 
     # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'circular')
 
     bridge_values = qF.eigenvals(bridge_matrix)
     bridge_min_value = np.argmin(bridge_values)
@@ -291,6 +323,7 @@ if ctl.geom_hf_8q_rainbow == 1:
                   qO.connect_op(8, [4], [5]).loc[one_states, one_states])
 
     # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
 
     rainbow_values = qF.eigenvals(rainbow_matrix)
     rainbow_min_value = np.argmin(rainbow_values)
@@ -319,6 +352,7 @@ if ctl.geom_hf_8q_pairs == 1:
     con_matrix = pairs.loc[one_states, one_states]
 
     # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
 
     pairs_values = qF.eigenvals(pairs_matrix)
     pairs_min_value = np.argmin(pairs_values)
@@ -345,6 +379,7 @@ if ctl.geom_hf_8q_far == 1:
     con_matrix = connect_1_8.loc[one_states, one_states]
 
     # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'circular')
 
     connect_1_8_values = qF.eigenvals(connect_1_8_matrix)
     connect_1_8_min_value = np.argmin(connect_1_8_values)
@@ -375,7 +410,8 @@ if ctl.geom_hf_8q_star == 1:
     star_matrix = -1 * star_octagon.loc[hf_states, hf_states]
     con_matrix = star_octagon.loc[one_states, one_states]
 
-    plot.eam_plot(con_matrix)
+    #plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'circular')
 
     star_values = qF.eigenvals(star_matrix)
     star_min_value = np.argmin(star_values)
@@ -385,7 +421,7 @@ if ctl.geom_hf_8q_star == 1:
     star_density = pd.DataFrame(np.outer(star_fs, star_fs), index=hf_states, columns=hf_states)
     star_eam = qEAM.EAM(star_density)
 
-    plot.eam_plot(star_eam)
+    #plot.eam_plot(star_eam)
 
     plot.compare_plot(con_matrix, star_eam, "8 qubits in star geometry")
 
@@ -406,7 +442,8 @@ if ctl.geom_hf_8q_mix == 1:
     mix_matrix = -1 * matrix_mix.loc[hf_states, hf_states]
     con_matrix = matrix_mix.loc[one_states, one_states]
 
-    plot.eam_plot(con_matrix)
+    #plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
 
     mix_values = qF.eigenvals(mix_matrix)
     mix_min_value = np.argmin(mix_values)
@@ -416,7 +453,7 @@ if ctl.geom_hf_8q_mix == 1:
     mix_density = pd.DataFrame(np.outer(mix_fs, mix_fs), index=hf_states, columns=hf_states)
     mix_eam = qEAM.EAM(mix_density)
 
-    plot.eam_plot(mix_eam)
+    #plot.eam_plot(mix_eam)
 
     plot.compare_plot(con_matrix, mix_eam, "8 qubits in mixed geometry")
 
@@ -433,6 +470,7 @@ if ctl.geom_chain == 1:
     con_matrix = -chain_matrix.loc[one_states, one_states]
 
     plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
 
     two_matrix = chain_matrix.loc[two_states, two_states]
     three_matrix = chain_matrix.loc[three_states, three_states]
@@ -464,3 +502,65 @@ if ctl.geom_chain == 1:
     hf_eam = qEAM.EAM(hf_density)
 
     plot.eam_plot(hf_eam, True)
+
+
+# #########################################################################
+# Neural (Half-filling)
+if ctl.geom_hf_neural == 1:
+    one_states = qS.generateNQubitsStates(8, 1)[::-1]
+    hf_states = qS.generateNQubitsStates(8, 4)
+
+    neural = (qO.connect_op(8, [1], [2, 3, 4]) +
+              qO.connect_op(8, [8], [5, 6, 7]) +
+              qO.connect_op(8, [2], [5]) +
+              qO.connect_op(8, [3], [6]) +
+              qO.connect_op(8, [4], [7]))
+
+    neural_matrix = -1 * neural.loc[hf_states, hf_states]
+    con_matrix = neural.loc[one_states, one_states]
+
+    # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
+
+    neural_values = qF.eigenvals(neural_matrix)
+    neural_min_value = np.argmin(neural_values)
+    neural_vectors = qF.eigenstates(neural_matrix)
+    neural_fs = neural_vectors[neural_min_value]
+
+    neural_density = pd.DataFrame(np.outer(neural_fs, neural_fs), index=hf_states, columns=hf_states)
+    neural_eam = qEAM.EAM(neural_density)
+
+    # plot.eam_plot(neural_eam)
+
+    plot.compare_plot(con_matrix, neural_eam, "8 qubits - Neural")
+
+# #########################################################################
+# Neural 2 (Half-filling)
+if ctl.geom_hf_neural2 == 1:
+    one_states = qS.generateNQubitsStates(8, 1)[::-1]
+    hf_states = qS.generateNQubitsStates(8, 4)
+
+    neural2 = (qO.connect_op(8, [1], [2, 3, 4]) +
+               qO.connect_op(8, [8], [5, 6, 7]) +
+               qO.connect_op(8, [2], [5, 3]) +
+               qO.connect_op(8, [3], [6, 4]) +
+               qO.connect_op(8, [4], [7]) +
+               qO.connect_op(8, [6], [5, 7]))
+
+    neural_matrix = -1 * neural2.loc[hf_states, hf_states]
+    con_matrix = neural2.loc[one_states, one_states]
+
+    # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'linear')
+
+    neural_values = qF.eigenvals(neural_matrix)
+    neural_min_value = np.argmin(neural_values)
+    neural_vectors = qF.eigenstates(neural_matrix)
+    neural_fs = neural_vectors[neural_min_value]
+
+    neural_density = pd.DataFrame(np.outer(neural_fs, neural_fs), index=hf_states, columns=hf_states)
+    neural_eam = qEAM.EAM(neural_density)
+
+    # plot.eam_plot(neural_eam)
+
+    plot.compare_plot(con_matrix, neural_eam, "8 qubits - Neural 2")
