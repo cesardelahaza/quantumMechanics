@@ -5,7 +5,7 @@ import networkx as nx
 from matplotlib.patches import Arc
 
 
-def eam_plot(mat: pd.DataFrame, addColorbar:bool = False):
+def eam_plot(mat: pd.DataFrame, addColorbar:bool = False, addValues:bool = False):
     n_qubits = len(mat.columns)
     fig, ax = plt.subplots()
     pl = ax.matshow(mat, cmap='cividis')
@@ -15,7 +15,14 @@ def eam_plot(mat: pd.DataFrame, addColorbar:bool = False):
     ax.set_yticklabels([str(i) for i in range(1, n_qubits+1)])
     if addColorbar:
         fig.colorbar(pl)
+    if addValues:
+        for (i, j), z in np.ndenumerate(mat):
+            if z > 0:
+                ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center')
+
     plt.show()
+    # https://stackoverflow.com/questions/20998083/show-the-values-in-the-grid-using-matplotlib
+    # for next time
 
 
 def compare_plot(con_mat, eam_mat, title:str):
@@ -38,6 +45,8 @@ def compare_plot(con_mat, eam_mat, title:str):
     fig.colorbar(p2, pad=0.02, location='bottom')
     fig.tight_layout()
     plt.show()
+    # https://stackoverflow.com/questions/20998083/show-the-values-in-the-grid-using-matplotlib
+    # for next time
 
 
 def adjacency_matrix_graph(adjacency_matrix, layout):
@@ -51,7 +60,7 @@ def adjacency_matrix_graph(adjacency_matrix, layout):
     G = nx.from_numpy_array(np.array(adjacency_matrix))
     fig, ax = plt.subplots()
     nx.draw_networkx_nodes(G, lay, ax=ax, node_color="lightblue")
-    nx.draw_networkx_labels(G, lay, ax=ax, labels={i-1: str(i) for i in range(1,9)})
+    nx.draw_networkx_labels(G, lay, ax=ax, labels={i-1: str(i) for i in range(1,ll+1)})
 
     for edge in G.edges():
         x1, y1 = lay[edge[0]]
@@ -71,3 +80,24 @@ def adjacency_matrix_graph(adjacency_matrix, layout):
     plt.axis('off')
     fig.tight_layout()
     plt.show()
+
+
+def plotProbsNode(vectors):
+    xxx = len(vectors[0])
+    #x = np.array([i for i in range(1, xxx+1)])
+    x = np.arange(1, xxx + 1)
+
+    fig, ax = plt.subplots()
+
+    for i, vector in enumerate(vectors):
+        ax.plot(x, vector, marker='o', label=f'Eigen {i+1}')
+
+    for xi, vi in zip(x, vectors[3]):
+        ax.annotate(f"{xi}", (xi, vi-0.002), ha="center")
+
+    plt.xlabel('Nodos')
+    plt.ylabel('$|v_i|^2$')
+    plt.title('Probabilidad de ocupación')
+    plt.legend()
+    plt.show()
+

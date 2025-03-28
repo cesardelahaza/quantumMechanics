@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+from scipy.sparse.linalg import eigsh
 
 
 def extractState(s: str, nQ: int) -> str:
@@ -83,3 +84,7 @@ def delete_qubits_list(positions: list[int], string):
     for i in pos:
         result = result[:i-1] + result[i:]
     return result
+
+
+def sparseEigen(m, k=1):
+    return eigsh(m, k=k, which='SA')

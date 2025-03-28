@@ -2,8 +2,9 @@
 ########################################################################
 import itertools
 import pandas as pd
-import permutations
+#import permutations
 import numpy as np
+from itertools import permutations as perm
 
 # Create a function that makes random states that have nq qubits of |0> and |1>
 def randomizeState(n_qubits: int, file_txt: str):
@@ -98,9 +99,8 @@ def permutations(s):
 
 
 def generateNQubitsStates(n_qubits: int, how_many: int):
-    ones = ['1' for i in range(how_many)]
-    zeroes = ['0' for i in range(n_qubits-how_many)]
-    return permutations(ones+zeroes)
+    positions = itertools.combinations(range(n_qubits), how_many)
+    return [''.join('1' if i in pos else '0' for i in range(n_qubits)) for pos in sorted(positions)][::-1]
 
 
 def generateStates(n_qubits: int):
@@ -114,3 +114,11 @@ def generateStates(n_qubits: int):
 def normalizeState(state: pd.DataFrame) -> pd.DataFrame:
     norm = np.sqrt(state.dot(state))
     return state/norm
+
+
+def tuples(n_qubits, how_many):
+    return list(perm(range(n_qubits), how_many))
+
+def nStates(n_qubits, how_many):
+    powers_of_2 = [2**i for i in range(n_qubits)]
+    return sorted({sum(powers_of_2[i] for i in tup) for tup in tuples(n_qubits, how_many)})

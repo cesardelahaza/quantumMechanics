@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import qState as qS
+import scipy.sparse as sp
 
 
 def annihilationOp(n_qubits: int, pos: int) -> pd.DataFrame:
@@ -14,11 +15,8 @@ def annihilationOp(n_qubits: int, pos: int) -> pd.DataFrame:
             result = np.kron(result, simpleAnnihilation)
         else:
             result = np.kron(result, identity2)
-    states = qS.generateAllPossibleStates(n_qubits, [""])
-    result = pd.DataFrame(result)
-    result.index = states
-    result.columns = states
-    return pd.DataFrame(result)
+    states = qS.generateAllPossibleStates(n_qubits)
+    return pd.DataFrame(result, index=states, columns=states)
 
 
 def creationOp(n_qubits: int, pos: int) -> pd.DataFrame:
@@ -31,10 +29,7 @@ def creationOp(n_qubits: int, pos: int) -> pd.DataFrame:
         else:
             result = np.kron(result, identity2)
     states = qS.generateAllPossibleStates(n_qubits, [""])
-    result = pd.DataFrame(result)
-    result.index = states
-    result.columns = states
-    return pd.DataFrame(result)
+    return pd.DataFrame(result, index=states, columns=states)
 
 
 def num_i_Op(n_qubits: int, pos: int) -> pd.DataFrame:
@@ -79,6 +74,41 @@ def connect_op(n_qubits, ls1, ls2):
     for i in ls1:
         for j in ls2:
             if i != j:
-                sumy += (creationOp(n_qubits, i).dot(annihilationOp(n_qubits, j)) +
-                         annihilationOp(n_qubits, i).dot(creationOp(n_qubits, j)))
+                sumy += (creationOp(n_qubits, i) @ annihilationOp(n_qubits, j) +
+                         annihilationOp(n_qubits, i) @ creationOp(n_qubits, j))
     return sumy
+
+
+def sparseAnnihilationOp(n_qubits: int, pos: int):
+    simpleAnnihilation = sp.csr_matrix([[0, 1], [0, 0]])
+    identity2 = sp.eye(2, format="csr")
+    result = simpleAnnihilation if pos == 1 else identity2
+    for i in range(2, n_qubits + 1):
+        if i == pos:
+            result = sp.kron(result, simpleAnnihilation, format="csr")
+        else:
+            result = sp.kron(result, identity2, format="csr")
+    return result
+
+
+def sparseCreationOp(n_qubits: int, pos: int):
+    simpleCreation = sp.csr_matrix([[0, 0], [1, 0]])
+    identity2 = sp.eye(2, format="csr")
+    result = simpleCreation if pos == 1 else identity2
+    for i in range(2, n_qubits + 1):
+        if i == pos:
+            result = sp.kron(result, simpleCreation, format="csr")
+        else:
+            result = sp.kron(result, identity2, format="csr")
+    return result
+
+
+def sparseConnectOp(n_qubits, ls1, ls2):
+    sumy = sp.csr_matrix((2 ** n_qubits, 2 ** n_qubits))
+    for i in ls1:
+        for j in ls2:
+            if i != j:
+                sumy += (sparseCreationOp(n_qubits, i) @ sparseAnnihilationOp(n_qubits, j) +
+                         sparseAnnihilationOp(n_qubits, i) @ sparseCreationOp(n_qubits, j))
+    return sumy
+

@@ -564,3 +564,521 @@ if ctl.geom_hf_neural2 == 1:
     # plot.eam_plot(neural_eam)
 
     plot.compare_plot(con_matrix, neural_eam, "8 qubits - Neural 2")
+
+# #########################################################################
+# This is [1,2,3]-[4]-[5]-[6,7,8] (Half-filling)
+if ctl.geom_hf_newbridge == 1:
+    one_states = qS.generateNQubitsStates(8, 1)[::-1]
+    hf_states = qS.generateNQubitsStates(8, 4)
+
+    bridge_matrix = (qO.connect_op(8, [4], [1, 2, 3]) +
+                     qO.connect_op(8, [5], [6, 7, 8]) +
+                     qO.connect_op(8, [4], [5]) +
+                     qO.connect_op(8, [2], [3,1]) + qO.connect_op(8, [6],[8]))
+    con_matrix = bridge_matrix.loc[one_states, one_states]
+    bridge_matrix = -bridge_matrix.loc[hf_states, hf_states]
+
+    # plot.eam_plot(con_matrix)
+    plot.adjacency_matrix_graph(con_matrix, 'circular')
+
+    bridge_values = qF.eigenvals(bridge_matrix)
+    bridge_min_value = np.argmin(bridge_values)
+    bridge_vectors = qF.eigenstates(bridge_matrix)
+    bridge_fs = bridge_vectors[bridge_min_value]
+
+    bridge_density = pd.DataFrame(np.outer(bridge_fs, bridge_fs), index=hf_states, columns=hf_states)
+    bridge_eam = qEAM.EAM(bridge_density)
+
+    # plot.eam_plot(bridge_eam)
+
+    plot.compare_plot(con_matrix, bridge_eam, "8 qubits in new bridge geometry")
+
+# #########################################################################
+# Bridge with 12 qubits
+if ctl.geom_hf_12_bridge == 1:
+    mmm = qO.sparseConnectOp(12, [1], [2, 3]) +\
+          qO.sparseConnectOp(12, [5], [3, 4, 6]) +\
+          qO.sparseConnectOp(12, [4], [2, 6]) + \
+          qO.sparseConnectOp(12, [7], [6, 8, 9]) + \
+          qO.sparseConnectOp(12, [9], [8, 11]) + \
+          qO.sparseConnectOp(12, [10], [8, 12]) + \
+          qO.sparseConnectOp(12, [12], [11])
+
+    ones_states = qS.nStates(12, 1)
+    ones_mmm = mmm[ones_states, :].tocsc()[:, ones_states].tocsr()
+    hf_states = qS.nStates(12, 6)
+    hf_names = qS.generateNQubitsStates(12, 6)
+    hf_mmm = -mmm[hf_states, :].tocsc()[:, hf_states].tocsr()
+    ones_vals, ones_vecs = qF.sparseEigen(ones_mmm)
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mmm)
+
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+
+    ones_names = qS.generateNQubitsStates(12, 1)
+    ones_pd = pd.DataFrame(ones_mmm.toarray(), index=ones_names, columns=ones_names)
+
+    #plot.eam_plot(ones_pd)
+
+    plot.compare_plot(ones_pd, hf_eam, "12 qubits bridge")
+
+# #########################################################################
+# This is the test for the bridge one and the probs of the eigenvectors
+if ctl.new_vecs == 1:
+    bridge_matrix = qO.sparseConnectOp(8, [4], [1, 2, 3]) + \
+                    qO.sparseConnectOp(8, [5], [6, 7, 8]) + \
+                    qO.sparseConnectOp(8, [4], [5])
+
+    ones_states = qS.nStates(8, 1)
+    ones_mat = bridge_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(8, 1)
+
+    hf_states = qS.nStates(8, 4)
+    hf_names = qS.generateNQubitsStates(8, 4)
+    hf_mat = -bridge_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+
+    ones_vals, ones_vecs = qF.sparseEigen(ones_mat, k=4)
+    probs = [vector**2 for vector in ones_vecs.T]
+
+    plot.plotProbsNode(probs)
+
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+
+    plot.eam_plot(hf_eam)
+
+# #########################################################################
+# This is the two points geometry with the eigenvector probs
+if ctl.new_two == 1:
+    two_matrix = qO.sparseConnectOp(8, [1], [2, 3, 4, 5, 6, 7]) + \
+                 qO.sparseConnectOp(8, [8], [2, 3, 4, 5, 6, 7])
+
+    ones_states = qS.nStates(8, 1)
+    ones_mat = two_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(8, 1)
+
+    hf_states = qS.nStates(8, 4)
+    hf_names = qS.generateNQubitsStates(8, 4)
+    hf_mat = -two_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+
+    ones_vals, ones_vecs = qF.sparseEigen(ones_mat, k=4)
+    probs = [vector ** 2 for vector in ones_vecs.T]
+
+    plot.plotProbsNode(probs)
+
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+
+    plot.eam_plot(hf_eam)
+
+# #########################################################################
+# This is the tree geometry
+if ctl.geom_tree_13 == 1:
+    tree_matrix = qO.sparseConnectOp(13, [1], [2, 3, 4]) + \
+                  qO.sparseConnectOp(13, [2], [5, 6, 7]) + \
+                  4*qO.sparseConnectOp(13, [3], [8, 9, 10]) + \
+                  qO.sparseConnectOp(13, [4], [11, 12, 13])
+
+    ones_states = qS.nStates(13, 1)[::-1]
+    ones_mat = tree_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(13, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(13, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(13, 6)
+    hf_mat = -tree_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+if ctl.benzene == 1:
+    benzene_matrix = 2*qO.sparseConnectOp(12, [1], [2]) + \
+                     qO.sparseConnectOp(12, [2], [3]) + \
+                     2*qO.sparseConnectOp(12, [3], [4]) + \
+                     qO.sparseConnectOp(12, [4], [5]) + \
+                     2*qO.sparseConnectOp(12, [5], [6]) + \
+                     qO.sparseConnectOp(12, [6], [1]) + \
+                     qO.sparseConnectOp(12, [1], [7]) + \
+                     qO.sparseConnectOp(12, [2], [8]) + \
+                     qO.sparseConnectOp(12, [3], [9]) + \
+                     qO.sparseConnectOp(12, [4], [10]) + \
+                     qO.sparseConnectOp(12, [5], [11]) + \
+                     qO.sparseConnectOp(12, [6], [12])
+
+    ones_states = qS.nStates(12, 1)[::-1]
+    ones_mat = benzene_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(12, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(12, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(12, 6)
+    hf_mat = -benzene_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, False, True)
+
+
+if ctl.benzene2 == 1:
+    benzene_matrix = 3*qO.sparseConnectOp(12, [1], [2, 6]) + \
+                     3*qO.sparseConnectOp(12, [3], [2, 4]) + \
+                     3*qO.sparseConnectOp(12, [5], [4, 6]) + \
+                     qO.sparseConnectOp(12, [1], [7]) + \
+                     qO.sparseConnectOp(12, [2], [8]) + \
+                     qO.sparseConnectOp(12, [3], [9]) + \
+                     qO.sparseConnectOp(12, [4], [10]) + \
+                     qO.sparseConnectOp(12, [5], [11]) + \
+                     qO.sparseConnectOp(12, [6], [12])
+
+    ones_states = qS.nStates(12, 1)[::-1]
+    ones_mat = benzene_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(12, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(12, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(12, 6)
+    hf_mat = -benzene_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+if ctl.double_ring == 1:
+    double_ring_matrix = qO.sparseConnectOp(10, [1], [2]) + \
+                         qO.sparseConnectOp(10, [2], [3]) + \
+                         qO.sparseConnectOp(10, [3], [4]) + \
+                         qO.sparseConnectOp(10, [4], [5]) + \
+                         qO.sparseConnectOp(10, [5], [1]) + \
+                         qO.sparseConnectOp(10, [6], [1, 7]) + \
+                         qO.sparseConnectOp(10, [7], [2, 8]) + \
+                         qO.sparseConnectOp(10, [8], [3, 9]) + \
+                         qO.sparseConnectOp(10, [9], [4, 10]) + \
+                         qO.sparseConnectOp(10, [10], [5, 6])
+
+    ones_states = qS.nStates(10, 1)[::-1]
+    ones_mat = double_ring_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(10, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(10, 5)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(10, 5)
+    hf_mat = -double_ring_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+if ctl.double_ring2 == 1:
+    double_ring_matrix = 2*qO.sparseConnectOp(10, [1], [2]) + \
+                         2*qO.sparseConnectOp(10, [2], [3]) + \
+                         2*qO.sparseConnectOp(10, [3], [4]) + \
+                         2*qO.sparseConnectOp(10, [4], [5]) + \
+                         2*qO.sparseConnectOp(10, [5], [1]) + \
+                         qO.sparseConnectOp(10, [6], [1, 7]) + \
+                         qO.sparseConnectOp(10, [7], [2, 8]) + \
+                         qO.sparseConnectOp(10, [8], [3, 9]) + \
+                         qO.sparseConnectOp(10, [9], [4, 10]) + \
+                         qO.sparseConnectOp(10, [10], [5, 6])
+
+    ones_states = qS.nStates(10, 1)[::-1]
+    ones_mat = double_ring_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(10, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(10, 5)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(10, 5)
+    hf_mat = -double_ring_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, False, True)
+
+if ctl.moebius == 1:
+    double_ring_matrix = qO.sparseConnectOp(12, [1], [2]) + \
+                         qO.sparseConnectOp(12, [2], [3, 8]) + \
+                         qO.sparseConnectOp(12, [3], [4, 9]) + \
+                         qO.sparseConnectOp(12, [4], [5, 10]) + \
+                         qO.sparseConnectOp(12, [5], [6, 11]) + \
+                         qO.sparseConnectOp(12, [6], [7]) + \
+                         qO.sparseConnectOp(12, [7], [8]) + \
+                         qO.sparseConnectOp(12, [8], [9]) + \
+                         qO.sparseConnectOp(12, [9], [10]) + \
+                         qO.sparseConnectOp(12, [10], [11]) + \
+                         qO.sparseConnectOp(12, [11], [12]) + \
+                         qO.sparseConnectOp(12, [12], [1])
+
+    ones_states = qS.nStates(12, 1)[::-1]
+    ones_mat = double_ring_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(12, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(12, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(12, 6)
+    hf_mat = -double_ring_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, False, True)
+
+if ctl.acid_tio == 1:
+    acid_tio_matrix = qO.sparseConnectOp(8, [4], [1, 2, 3, 5]) + \
+                      qO.sparseConnectOp(8, [5, 6], [5, 6]) + \
+                      qO.sparseConnectOp(8, [7], [5, 8])
+
+
+    ones_states = qS.nStates(8, 1)[::-1]
+    ones_mat = acid_tio_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(8, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(8, 4)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(8, 4)
+    hf_mat = -acid_tio_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, False, True)
+
+if ctl.ammonia == 1:
+    ammonia_matrix = qO.sparseConnectOp(4, [4], [1, 2, 3])
+
+    ones_states = qS.nStates(4, 1)[::-1]
+    ones_mat = ammonia_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(4, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(4, 2)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(4, 2)
+    hf_mat = -ammonia_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, False, True)
+
+if ctl.star2 == 1:
+    ammonia_matrix = qO.sparseConnectOp(8, [1], [4, 6]) + \
+                     qO.sparseConnectOp(8, [2], [5, 7]) + \
+                     qO.sparseConnectOp(8, [3], [6, 8]) + \
+                     qO.sparseConnectOp(8, [5], [8]) + \
+                     qO.sparseConnectOp(8, [4], [7])
+
+    ones_states = qS.nStates(8, 1)[::-1]
+    ones_mat = ammonia_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(8, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(8, 4)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(8, 4)
+    hf_mat = -ammonia_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True, False)
+
+# #########################################################################
+# This is the tree geometry version 2
+if ctl.geom_tree_13_v2 == 1:
+    tree_matrix = qO.sparseConnectOp(13, [1], [2, 3, 4]) + \
+                  qO.sparseConnectOp(13, [2], [5, 6, 7]) + \
+                  qO.sparseConnectOp(13, [3], [8, 9, 10]) + \
+                  qO.sparseConnectOp(13, [4], [11, 12, 13]) + \
+                  qO.sparseConnectOp(13, [7], [8]) + \
+                  qO.sparseConnectOp(13, [10], [11]) + \
+                  qO.sparseConnectOp(13, [13], [5])
+
+    ones_states = qS.nStates(13, 1)[::-1]
+    ones_mat = tree_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(13, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(13, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(13, 6)
+    hf_mat = -tree_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+# #########################################################################
+# This is a geometry inspired on the last
+if ctl.geom_tree_inspo == 1:
+    tree_inspo_matrix = qO.sparseConnectOp(10, [1], [2, 3, 4]) + \
+                        qO.sparseConnectOp(10, [5], [2, 3]) + \
+                        qO.sparseConnectOp(10, [6], [3, 4]) + \
+                        qO.sparseConnectOp(10, [7], [2, 4]) + \
+                        qO.sparseConnectOp(10, [8], [2, 5, 3]) + \
+                        qO.sparseConnectOp(10, [9], [3, 6, 4]) + \
+                        qO.sparseConnectOp(10, [10], [2, 4, 7])
+
+    ones_states = qS.nStates(10, 1)[::-1]
+    ones_mat = tree_inspo_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(10, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(10, 5)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(10, 5)
+    hf_mat = -tree_inspo_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+
+# #########################################################################
+# This is pyramid tree
+if ctl.pyramid_tree == 1:
+    pyramid_tree_matrix = qO.sparseConnectOp(13, [1], [2, 3, 4]) + \
+                          qO.sparseConnectOp(13, [2], [5, 6, 7]) + \
+                          qO.sparseConnectOp(13, [3], [8, 9, 10]) + \
+                          qO.sparseConnectOp(13, [4], [11, 12, 13]) + \
+                          qO.sparseConnectOp(13, [2], [3, 4]) + \
+                          qO.sparseConnectOp(13, [3], [4]) + \
+                          qO.sparseConnectOp(13, [5], [6, 7]) + \
+                          qO.sparseConnectOp(13, [6], [7]) + \
+                          qO.sparseConnectOp(13, [8], [9, 10]) + \
+                          qO.sparseConnectOp(13, [9], [10]) + \
+                          qO.sparseConnectOp(13, [11], [12, 13]) + \
+                          qO.sparseConnectOp(13, [12], [13])
+
+    ones_states = qS.nStates(13, 1)[::-1]
+    ones_mat = pyramid_tree_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(13, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(13, 6)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(13, 6)
+    hf_mat = -pyramid_tree_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True)
+
+# #########################################################################
+# Let's see how does deleting connections affect
+# Two points geometry and delete the connections with qubit 1
+if ctl.del_two_points == 1:
+    del_two_points_matrix = qO.sparseConnectOp(8, [8], [2, 3, 4, 5, 6, 7])
+
+    ones_states = qS.nStates(8, 1)[::-1]
+    ones_mat = del_two_points_matrix[ones_states, :].tocsc()[:, ones_states].tocsr()
+    ones_names = qS.generateNQubitsStates(8, 1)
+
+    con_matrix = pd.DataFrame(ones_mat.toarray(), index=ones_names, columns=ones_names)
+    plot.eam_plot(con_matrix, True)
+    # #print(con_matrix.to_string())
+    #
+    # #plot.adjacency_matrix_graph(con_matrix, 'circular')
+    #
+    hf_states = qS.nStates(8, 4)
+    # #print(hf_states)
+    hf_names = qS.generateNQubitsStates(8, 4)
+    hf_mat = -del_two_points_matrix[hf_states, :].tocsc()[:, hf_states].tocsr()
+    #
+    hf_vals, hf_vecs = qF.sparseEigen(hf_mat)
+    hf_density = pd.DataFrame(np.outer(hf_vecs, hf_vecs), index=hf_names, columns=hf_names)
+    hf_eam = qEAM.EAM(hf_density)
+    #
+    plot.eam_plot(hf_eam, True, True)
+
+# #########################################################################
+# Let's see how does deleting connections affect
+# Two points geometry and delete the connections with qubit 1

@@ -1,7 +1,8 @@
 import qFunctions as qF
 import pandas as pd
 import numpy as np
-import qState as cs
+import qState as qS
+import scipy as sp
 
 
 def density_matrix(states, nQ):
@@ -71,24 +72,24 @@ def reduced_density_matrix(positions: list[int], arr):
     :return: reduced density matrix of the qubits in positions
     """
     all_states = list(arr.columns)
-    dim = len(all_states[0]) # how many qubits are there
-    qubits = len(positions) # how many qubits we select
-    states = cs.generateAllPossibleStates(qubits, [""])
+    dim = len(all_states[0])  # how many qubits are there
+    qubits = len(positions)  # how many qubits we select
+    states = qS.generateAllPossibleStates(qubits, [""])
     sumy = pd.DataFrame(0, index=states, columns=states, dtype=float)
-    rest_states = cs.generateAllPossibleStates(dim-qubits, [""])
+    rest_states = qS.generateAllPossibleStates(dim-qubits, [""])
     for i in states:
         for j in states:
             for el in range(len(rest_states)):
                 ix = list(map(lambda x: qF.insert_qubits_list(positions, i, x), rest_states))
                 jx = list(map(lambda x: qF.insert_qubits_list(positions, j, x), rest_states))
-                sumy.at[i,j] += arr.loc[ix[el]][jx[el]]
+                sumy.at[i, j] += arr.loc[ix[el]][jx[el]]
     return sumy
 
 
 def reduced_density_matrix_chain(positions: list[int], arr):
-    all_states = list(arr.columns) # Example: 10000 01000 00100 00010 00001
-    qubits = len(positions)  # how many qubits we select
-    states = cs.generateAllPossibleStates(qubits, [""])
+    all_states = list(arr.columns)  # Example: 10000 01000 00100 00010 00001
+    qubits = len(positions)   # how many qubits we select
+    states = qS.generateAllPossibleStates(qubits, [""])
     sumy = pd.DataFrame(0, index=states, columns=states, dtype=float)
     rest_states = list(set((map(lambda x: qF.delete_qubits_list(positions, x), all_states))))
     for i in states:
@@ -99,3 +100,30 @@ def reduced_density_matrix_chain(positions: list[int], arr):
                 if ir[el] in all_states and jr[el] in all_states:
                     sumy.at[i, j] += arr.loc[ir[el]][jr[el]]
     return sumy
+
+def sparse_density_matrix_1p(pos_qubit, arr, state_names):
+    dim = len(state_names)
+    sum00, sum01, sum10, sum11 = 0, 0, 0, 0
+    for i in range(dim):
+        row = state_names[i]
+        rowEx = row[:pos_qubit - 1] + row[pos_qubit:]
+        rq = row[pos_qubit - 1]
+        for j in range(dim):
+            col = state_names[j]
+            colEx = col[:pos_qubit - 1] + col[pos_qubit:]
+            cq = col[pos_qubit - 1]
+            if rowEx == colEx:
+                value = arr.loc[row][col]
+                if rq == '0' and cq == '0':
+                    sum00 += value
+                elif rq == '0' and cq == '1':
+                    sum01 += value
+                elif rq == '1' and cq == '0':
+                    sum10 += value
+                else:
+                    sum11 += value
+    return sp.sparse.csr_matrix([[sum00, sum01], [sum10, sum11]])
+
+def sparse_density_matrix_2p(pos1, pos2, arr, state_names):
+    return None
+
