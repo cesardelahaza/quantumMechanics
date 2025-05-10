@@ -119,6 +119,7 @@ def normalizeState(state: pd.DataFrame) -> pd.DataFrame:
 def tuples(n_qubits, how_many):
     return list(perm(range(n_qubits), how_many))
 
+
 def nStates(n_qubits, how_many):
     powers_of_2 = [2**i for i in range(n_qubits)]
     return sorted({sum(powers_of_2[i] for i in tup) for tup in tuples(n_qubits, how_many)})

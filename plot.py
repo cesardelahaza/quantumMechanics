@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 from matplotlib.patches import Arc
+import time
 
 
-def eam_plot(mat: pd.DataFrame, addColorbar:bool = False, addValues:bool = False):
+def eam_plot(mat: pd.DataFrame, addColorbar: bool = True, addValues: bool = False):
     n_qubits = len(mat.columns)
     fig, ax = plt.subplots()
     pl = ax.matshow(mat, cmap='cividis')
@@ -15,17 +16,19 @@ def eam_plot(mat: pd.DataFrame, addColorbar:bool = False, addValues:bool = False
     ax.set_yticklabels([str(i) for i in range(1, n_qubits+1)])
     if addColorbar:
         fig.colorbar(pl)
+
     if addValues:
         for (i, j), z in np.ndenumerate(mat):
             if z > 0:
-                ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center')
+                ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center', fontsize='x-small')
 
-    plt.show()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plt.savefig('/Users/cesarots/Downloads/' + timestr + '.pdf', pad_inches=0, bbox_inches='tight', format='pdf')
     # https://stackoverflow.com/questions/20998083/show-the-values-in-the-grid-using-matplotlib
     # for next time
 
 
-def compare_plot(con_mat, eam_mat, title:str):
+def compare_plot(con_mat, eam_mat, title: str):
     n_qubits = len(con_mat.columns)
     fig, (fig1, fig2) = plt.subplots(1, 2)
     fig.suptitle(title)
@@ -44,9 +47,8 @@ def compare_plot(con_mat, eam_mat, title:str):
     fig2.set_yticklabels([str(i) for i in range(1, n_qubits + 1)])
     fig.colorbar(p2, pad=0.02, location='bottom')
     fig.tight_layout()
-    plt.show()
-    # https://stackoverflow.com/questions/20998083/show-the-values-in-the-grid-using-matplotlib
-    # for next time
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plt.savefig('/Users/cesarots/Downloads/' + timestr + '.pdf', pad_inches=0, bbox_inches='tight', format='pdf')
 
 
 def adjacency_matrix_graph(adjacency_matrix, layout):
@@ -79,25 +81,26 @@ def adjacency_matrix_graph(adjacency_matrix, layout):
             nx.draw_networkx_edges(G, lay, edgelist=[edge], ax=ax)
     plt.axis('off')
     fig.tight_layout()
-    plt.show()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plt.savefig('/Users/cesarots/Downloads/' + timestr + '.pdf', pad_inches=0, bbox_inches='tight', format='pdf')
 
 
-def plotProbsNode(vectors):
+def plotProbsNode(vectors, vals):
     xxx = len(vectors[0])
-    #x = np.array([i for i in range(1, xxx+1)])
     x = np.arange(1, xxx + 1)
 
     fig, ax = plt.subplots()
 
     for i, vector in enumerate(vectors):
-        ax.plot(x, vector, marker='o', label=f'Eigen {i+1}')
+        ax.plot(x, vector, marker='o', label=f'Eig $\\lambda_{i+1}$ = {vals[i]:.3e}')
 
-    for xi, vi in zip(x, vectors[3]):
-        ax.annotate(f"{xi}", (xi, vi-0.002), ha="center")
+    # for xi, vi in zip(x, vectors[0]):
+    #     ax.annotate(f"{xi}", (xi, vi-0.002), ha="center")
 
     plt.xlabel('Nodos')
     plt.ylabel('$|v_i|^2$')
     plt.title('Probabilidad de ocupación')
     plt.legend()
-    plt.show()
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    plt.savefig('/Users/cesarots/Downloads/' + timestr + '.pdf', pad_inches=0, bbox_inches='tight', format='pdf')
 

@@ -112,3 +112,12 @@ def sparseConnectOp(n_qubits, ls1, ls2):
                          sparseAnnihilationOp(n_qubits, i) @ sparseCreationOp(n_qubits, j))
     return sumy
 
+def sparseNum_i_op(n_qubits: int, pos: int):
+    return sparseCreationOp(n_qubits, pos).dot(sparseAnnihilationOp(n_qubits, pos))
+
+def sparseChemical_potential_operator(n_qubits):
+    dim = 2**n_qubits
+    sumy = sp.csr_matrix((dim, dim))
+    for i in range(n_qubits):
+        sumy += sparseNum_i_op(n_qubits, i+1)
+    return sumy

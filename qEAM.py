@@ -8,6 +8,7 @@ import qState as qS
 def EAM(arr: pd.DataFrame) -> pd.DataFrame:
     """
     Entanglement adjacency matrix
+    :rtype: object
     :param arr: Density matrix
     :return: Entanglement adjacency matrix
     """

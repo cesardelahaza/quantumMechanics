@@ -87,4 +87,10 @@ def delete_qubits_list(positions: list[int], string):
 
 
 def sparseEigen(m, k=1):
+    """
+    Selects the first k lowest eigenvalues and their eigenvectors
+    :param m: the matrix
+    :param k: how many eigenvals we want
+    :return:
+    """
     return eigsh(m, k=k, which='SA')

@@ -101,6 +101,7 @@ def reduced_density_matrix_chain(positions: list[int], arr):
                     sumy.at[i, j] += arr.loc[ir[el]][jr[el]]
     return sumy
 
+
 def sparse_density_matrix_1p(pos_qubit, arr, state_names):
     dim = len(state_names)
     sum00, sum01, sum10, sum11 = 0, 0, 0, 0
@@ -123,6 +124,7 @@ def sparse_density_matrix_1p(pos_qubit, arr, state_names):
                 else:
                     sum11 += value
     return sp.sparse.csr_matrix([[sum00, sum01], [sum10, sum11]])
+
 
 def sparse_density_matrix_2p(pos1, pos2, arr, state_names):
     return None
