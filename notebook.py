@@ -8,6 +8,7 @@ import numpy as np
 import time
 ###############################
 import control as ctl
+import qDensity
 import qDensity as qD
 import qEAM
 import qState as qS
@@ -1245,4 +1246,27 @@ if ctl.sss == 1:
     ones_m = qS.nStates(3, 1)
     pd_m = m[ones_m, :].tocsc()[:, ones_m].tocsr()
 
+if ctl.tfg == 1:
+    hf_states = qS.nStates(4, 2)
+    hf_names = qS.generateNQubitsStates(4, 2)
+    H = (qO.sparseConnectOp(4, [1,2], [3]) +
+         qO.sparseConnectOp(4, [1], [2]) +
+         qO.sparseConnectOp(4, [3], [4]))
+    H_hf = -H[hf_states, :].tocsc()[:, hf_states].tocsr()
+    mat_H = pd.DataFrame(H_hf.toarray(), index=hf_names, columns=hf_names)
+    # Eigens
+    hf_val, hf_vec = qF.sparseEigen(H_hf)
+    # Density matrix
+    hf_density = pd.DataFrame(np.outer(hf_vec, hf_vec), index=hf_names, columns=hf_names)
+    print(hf_density)
+    p1 = qDensity.density_matrix_1p(1, hf_density)
+    print("P1 is\n",p1)
+    p12 = qDensity.density_matrix_2p(1, 2, hf_density)
+    print("P12 is\n", p12)
+    print(p12.iloc[0,], "\n", p12.iloc[1,], "\n", p12.iloc[2,], "\n", p12.iloc[3,])
+    p2 = qDensity.density_matrix_1p(2, hf_density)
+    print("P2 is\n", p2)
+    # EAM
+    hf_EAM = qEAM.EAM(hf_density)
 
+    #plot.eam_plot(hf_EAM, True, True)

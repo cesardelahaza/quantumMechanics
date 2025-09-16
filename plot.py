@@ -9,7 +9,7 @@ import time
 def eam_plot(mat: pd.DataFrame, addColorbar: bool = True, addValues: bool = False):
     n_qubits = len(mat.columns)
     fig, ax = plt.subplots()
-    pl = ax.matshow(mat, cmap='cividis')
+    pl = ax.matshow(mat, cmap='BuPu')
     plt.xticks(range(n_qubits))
     plt.yticks(range(n_qubits))
     ax.set_xticklabels([str(i) for i in range(1, n_qubits+1)])

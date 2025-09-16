@@ -51,13 +51,21 @@ GHZ_state = 0
 geom_new_puente = 0
 geom_tunnel = 0
 sss = 0
+tfg = 1
 ###############################
-r_bridge_8q = 1
-r_twoT_8q = 1
-r_tunnel_12q = 1
-r_star_8q = 1
-r_benzene = 1
-r_tree_13q = 1
+r_bridge_8q = 0
+r_twoT_8q = 0
+r_tunnel_12q = 0
+r_star_8q = 0
+r_benzene = 0
+r_tree_13q = 0
 r_rainbow_8q = 0
 r_rainbow_8q_new = 0
 r_closedRing_4 = 0
+newcase = 0
+chain = 0
+plane = 0
+###############################
+r_bridge_8q_blog = 0
+chain_blog = 0
+r_tree_13q_blog = 0

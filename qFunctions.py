@@ -94,3 +94,10 @@ def sparseEigen(m, k=1):
     :return:
     """
     return eigsh(m, k=k, which='SA')
+
+def convertMatrix(mat, val):
+    aux_mat = mat
+    for (i, j), z in np.ndenumerate(mat):
+        if z < val:
+            aux_mat.iloc[i, j] = 0
+    return aux_mat
